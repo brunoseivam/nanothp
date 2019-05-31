@@ -1,7 +1,17 @@
 #include <RF24.h>
+#include <ESP8266WiFi.h>
+#include <PubSubClient.h>
+
+// Connect to the WiFi
+const char* ssid = "martins-win7";
+const char* password = "872CvMG0";
+const char* mqtt_server = "10.42.0.1";
 
 RF24 radio(D1, D2); // CE, CSN
 const byte address[6] = "00001";
+
+WiFiClient wifiClient;
+PubSubClient client(mqtt_server, 1883, wifiClient);
 
 void setup() {
   Serial.begin(115200);
@@ -11,6 +21,19 @@ void setup() {
   //radio.setDataRate(RF24_1MBPS);
   radio.setDataRate(RF24_250KBPS);
   radio.startListening();
+
+  WiFi.begin(ssid, password);
+
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print(".");
+  }
+  Serial.println("");
+  Serial.println("WiFi connected");
+  Serial.println("IP address: ");
+  Serial.println(WiFi.localIP());
+
+  client.connect("Gateway");
   Serial.println("Ready");
 }
 
@@ -26,9 +49,9 @@ void loop() {
       Serial.print(" ");
     }
     Serial.println("]");
-    
+
     char type = *(p++);
-    
+
     char serial[6];    
     for(int i = 0; i < 6; ++i)
       serial[i] = *(p++);
@@ -54,5 +77,38 @@ void loop() {
     Serial.print(" P: "); Serial.print(pres);
 
     Serial.println("");
+
+    char serial_str[32];
+    sprintf(serial_str, "%02X%02X%02X%02X%02X%02X",
+      serial[0], serial[1], serial[2],
+      serial[3], serial[4], serial[5]);
+
+    // Publish to MQTT
+    if (!client.connected()) {
+      client.connect("gateway");
+    }
+
+    if (client.connected()) {
+      char topic[64];
+      char value[32];
+
+      sprintf(topic, "%s/battery", serial_str);
+      sprintf(value, "%d", bat);
+      client.publish(topic, value);
+
+      sprintf(topic, "%s/temperature", serial_str);
+      sprintf(value, "%.2f", temp);
+      client.publish(topic, value);
+
+      sprintf(topic, "%s/humidity", serial_str);
+      sprintf(value, "%.2f", hum);
+      client.publish(topic, value);
+
+      sprintf(topic, "%s/pressure", serial_str);
+      sprintf(value, "%.2f", pres);
+      client.publish(topic, value);
+    } else {
+      Serial.println("MQTT disconnected");
+    }
   }
 }

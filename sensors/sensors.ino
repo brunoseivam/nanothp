@@ -1,7 +1,7 @@
 // BME280: https://github.com/finitespace/BME280
 
 #define DEVICE_TYPE 0x01
-#define DEBUG
+//#define DEBUG
 //#define RGB_LED
 //#define USE_INTR
 
@@ -36,10 +36,10 @@ const byte ADDR[6] = "00001";
   #define INTR_PIN 2
 #endif
 
-#define LED_PIN LED_BUILTIN // pin 13, same as SCK...
-#define RF_CE_PIN 7
+#define LED_PIN    LED_BUILTIN // pin 13, same as SCK...
+#define RF_CE_PIN  7
 #define RF_CSN_PIN 8
-#define BATT_PIN A0
+#define BATT_PIN   A0
 #define MOSFET_PIN 5
 
 // CE, CSN pins
@@ -126,6 +126,7 @@ void setup() {
   Serial.begin(115200);
   Serial.println("Starting up!");
 #endif
+  delay(100);
   
   Wire.begin();
   if (!bme.begin()) {

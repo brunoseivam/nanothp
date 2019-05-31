@@ -55,11 +55,14 @@ uint16_t readBattery ()
    *  ((1e6+470e3)/470e3)*1.1 = Vmax = 3.44 Volts
    *  3.44/1023 = Volts per bit = 0.003363075
    */
-  // Read twice
-  int val = analogRead(BATT_PIN);
-  val = analogRead(BATT_PIN);
-  //return val * 0.003363075;
-  return val;
+  // Discard first reading
+  analogRead(BATT_PIN);
+
+  // Average 10 readings
+  uint32_t val = 0;
+  for (int i = 0; i < 10; ++i)
+    val += analogRead(BATT_PIN);
+  return val/10;
 }
 
 bool interrupt = 0;
@@ -135,6 +138,10 @@ void setup() {
     Serial.println("Failed to Initialize temp sensor");
 #endif
   }
+  
+#ifdef DEBUG
+  Serial.println("Temp sensor initialized");
+#endif
 
   sha204.getSerialNumber(serialNumber);
 
@@ -165,8 +172,6 @@ void loop() {
   FastLED.show();
 #endif
 
-  enablePeriph(true);
-
 #ifdef USE_INTR
   if (interrupt) {
 #ifdef DEBUG
@@ -176,6 +181,10 @@ void loop() {
     sleep_disable();
   }
 #endif
+
+  uint16_t battery = readBattery();
+
+  enablePeriph(true);
   
   int start = millis();
   char buffer[32] = "";
@@ -183,8 +192,6 @@ void loop() {
   float pres = 0.0, temp = 0.0, hum = 0.0;
 
   bme.read(pres, temp, hum);
-
-  uint16_t battery = readBattery();
 
 #ifdef DEBUG
   Serial.println("\nReadings:");
@@ -210,7 +217,7 @@ void loop() {
 
 #ifdef DEBUG
   Serial.print("[ ");
-  for (int i = 0; i < 23; ++i) {
+  for (int i = 0; i < 21; ++i) {
     Serial.print((unsigned char)buffer[i], HEX);
     Serial.print(" ");
   }
@@ -219,16 +226,41 @@ void loop() {
 
   radio.begin();
 
+#ifdef DEBUG
+  Serial.println("Radio begin");
+#endif
+
   bool ok = false;
 
   if (radio.isChipConnected()) {
+
+#ifdef DEBUG
+    Serial.println("Radio connected");
+#endif
+
     radio.openWritingPipe(ADDR);
     radio.setPALevel(RF24_PA_MAX);
     radio.setDataRate(RF24_250KBPS);
     radio.stopListening();
-    ok = radio.write(&buffer, 23, 1);
+
+#ifdef DEBUG
+    Serial.println("Radio will write");
+#endif
+
+    ok = radio.write(buffer, 21, 1);
+
+#ifdef DEBUG
+    Serial.print("Radio wrote. OK=");
+    Serial.println(ok);
+#endif
+
     radio.powerDown();
   }
+
+#ifdef DEBUG
+  else
+    Serial.println("Radio not connected!");
+#endif
 
   duration = millis() - start;
 

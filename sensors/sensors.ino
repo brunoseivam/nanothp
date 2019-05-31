@@ -48,7 +48,7 @@ BME280I2C bme;
 
 int duration = 0;
 
-float readBattery ()
+uint16_t readBattery ()
 {
   /* 1M, 470K divider across battery and using internal ADC ref of 1.1V
    *  Sense point is bypassed with 0.1 uF cap to reduce noise at that point
@@ -58,7 +58,8 @@ float readBattery ()
   // Read twice
   int val = analogRead(BATT_PIN);
   val = analogRead(BATT_PIN);
-  return val * 0.003363075;
+  //return val * 0.003363075;
+  return val;
 }
 
 bool interrupt = 0;
@@ -183,7 +184,7 @@ void loop() {
 
   bme.read(pres, temp, hum);
 
-  float battery = readBattery();
+  uint16_t battery = readBattery();
 
 #ifdef DEBUG
   Serial.println("\nReadings:");
@@ -202,10 +203,10 @@ void loop() {
     *(p++) = serialNumber[i];
   }
 
-  *((float*)p) = battery; p += 4;
-  *((float*)p) = temp;    p += 4;
-  *((float*)p) = hum;     p += 4;
-  *((float*)p) = pres;    p += 4;
+  *((uint16_t*)p) = battery; p += 2;
+  *((float*)p)    = temp;    p += 4;
+  *((float*)p)    = hum;     p += 4;
+  *((float*)p)    = pres;    p += 4;
 
 #ifdef DEBUG
   Serial.print("[ ");

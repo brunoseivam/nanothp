@@ -21,7 +21,7 @@ void loop() {
 
     char *p = buffer;
     Serial.print("[ ");
-    for (int i = 0; i < 23; ++i) {
+    for (int i = 0; i < 21; ++i) {
       Serial.print(buffer[i], HEX);
       Serial.print(" ");
     }
@@ -33,10 +33,10 @@ void loop() {
     for(int i = 0; i < 6; ++i)
       serial[i] = *(p++);
 
-    float bat  = *((float*)p); p += 4;
-    float temp = *((float*)p); p += 4;
-    float hum  = *((float*)p); p += 4;
-    float pres = *((float*)p); p += 4;
+    uint16_t bat = *((uint16_t*)p); p += 2;
+    float temp   = *((float*)p);    p += 4;
+    float hum    = *((float*)p);    p += 4;
+    float pres   = *((float*)p);    p += 4;
 
     Serial.print("<");
     Serial.print(type, HEX);

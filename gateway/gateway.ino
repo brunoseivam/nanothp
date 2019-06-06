@@ -1,3 +1,7 @@
+// Change it in the library header itself if the following is not picked up.
+// Library's default is 128.
+#define MQTT_MAX_PACKET_SIZE 1024
+
 #include <RF24.h>
 #include <ESP8266WiFi.h>
 #include <PubSubClient.h>
@@ -36,6 +40,8 @@ void setup() {
   client.connect("Gateway");
   Serial.println("Ready");
 }
+
+const char *device_name = "nanothp";
 
 void loop() {
   if (radio.available()) {
@@ -89,24 +95,52 @@ void loop() {
     }
 
     if (client.connected()) {
-      char topic[64];
-      char value[32];
+      char topic[128];
+      char value[1024];
 
-      sprintf(topic, "%s/battery", serial_str);
+      sprintf(topic, "%s/%s/battery", device_name, serial_str);
       sprintf(value, "%d", bat);
       client.publish(topic, value);
 
-      sprintf(topic, "%s/temperature", serial_str);
+      sprintf(topic, "%s/%s/batteryUnit", device_name, serial_str);
+      client.publish(topic, "cts");
+
+      sprintf(topic, "%s/%s/temperature", device_name, serial_str);
       sprintf(value, "%.2f", temp);
       client.publish(topic, value);
 
-      sprintf(topic, "%s/humidity", serial_str);
+      sprintf(topic, "%s/%s/temperatureUnit", device_name, serial_str);
+      client.publish(topic, "C");
+
+      sprintf(topic, "%s/%s/humidity", device_name, serial_str);
       sprintf(value, "%.2f", hum);
       client.publish(topic, value);
 
-      sprintf(topic, "%s/pressure", serial_str);
+      sprintf(topic, "%s/%s/humidityUnit", device_name, serial_str);
+      client.publish(topic, "%");
+
+      sprintf(topic, "%s/%s/pressure", device_name, serial_str);
       sprintf(value, "%.2f", pres);
       client.publish(topic, value);
+
+      sprintf(topic, "%s/%s/pressureUnit", device_name, serial_str);
+      client.publish(topic, "hPa");
+
+      sprintf(topic, "%s/%s/all", device_name, serial_str);
+      sprintf(value, "{"
+        "\"device\": \"%s\","
+        "\"id\": \"%s\","
+        "\"battery\":%d,"
+        "\"temperature\":%.2f,"
+        "\"humidity\":%.2f,"
+        "\"pressure\":%.2f,"
+        "\"batteryUnit\":\"cts\","
+        "\"temperatureUnit\":\"C\","
+        "\"humidityUnit\":\"%%\","
+        "\"pressureUnit\":\"hPa\""
+      "}", device_name, serial_str, bat, temp, hum, pres);
+      client.publish(topic, value);
+
     } else {
       Serial.println("MQTT disconnected");
     }

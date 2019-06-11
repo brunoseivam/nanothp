@@ -126,10 +126,21 @@ void loop() {
       sprintf(topic, "%s/%s/pressureUnit", device_name, serial_str);
       client.publish(topic, "hPa");
 
+      const char *location;
+      if (!strcmp(serial_str, "44BD0422CF0F"))
+        location = "\"location\":\"desk\",";
+      else if (!strcmp(serial_str, "AF02F3B3CC79"))
+        location = "\"location\":\"shelf\",";
+      else if (!strcmp(serial_str, "03F3F9628046"))
+        location = "\"location\":\"locker\",";
+      else
+        location = "";
+
       sprintf(topic, "%s/%s/all", device_name, serial_str);
       sprintf(value, "{"
         "\"device\": \"%s\","
         "\"id\": \"%s\","
+        "%s"
         "\"battery\":%d,"
         "\"temperature\":%.2f,"
         "\"humidity\":%.2f,"
@@ -138,7 +149,7 @@ void loop() {
         "\"temperatureUnit\":\"C\","
         "\"humidityUnit\":\"%%\","
         "\"pressureUnit\":\"hPa\""
-      "}", device_name, serial_str, bat, temp, hum, pres);
+      "}", device_name, serial_str, location, bat, temp, hum, pres);
       client.publish(topic, value);
 
     } else {

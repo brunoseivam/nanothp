@@ -206,9 +206,8 @@ void loop() {
 
   *(p++) = DEVICE_TYPE;
   
-  for (int i = 2; i < 8; ++i) {
+  for (int i = 2; i < 8; ++i)
     *(p++) = serialNumber[i];
-  }
 
   *((uint16_t*)p) = battery; p += 2;
   *((float*)p)    = temp;    p += 4;
@@ -237,7 +236,6 @@ void loop() {
 #ifdef DEBUG
     Serial.println("Radio connected");
 #endif
-
     radio.openWritingPipe(ADDR);
     radio.setPALevel(RF24_PA_MAX);
     radio.setDataRate(RF24_250KBPS);

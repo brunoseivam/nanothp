@@ -24,6 +24,7 @@ void setup() {
   radio.openReadingPipe(0, address);
   //radio.setDataRate(RF24_1MBPS);
   radio.setDataRate(RF24_250KBPS);
+  radio.setAutoAck(true);
   radio.startListening();
 
   WiFi.begin(ssid, password);

@@ -239,6 +239,7 @@ void loop() {
     radio.openWritingPipe(ADDR);
     radio.setPALevel(RF24_PA_MAX);
     radio.setDataRate(RF24_250KBPS);
+    radio.setAutoAck(true);
     radio.stopListening();
 
 #ifdef DEBUG
@@ -250,6 +251,7 @@ void loop() {
 #ifdef DEBUG
     Serial.print("Radio wrote. OK=");
     Serial.println(ok);
+    delay(100);
 #endif
 
     radio.powerDown();
